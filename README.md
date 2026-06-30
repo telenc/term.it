@@ -23,6 +23,8 @@ A free, open-source, **native macOS SSH & SFTP client** built with Swift and Swi
 - 📁 **SFTP file browser** — Finder-style selection, upload/download, delete, new folder, drag & drop both ways
 - 🪄 **Drag a file onto the terminal** → it uploads to `/tmp` on the server and pastes the remote path
 - 🔐 **Auth** by password or OpenSSH private key (ed25519 / RSA), secrets stored in the macOS Keychain
+- 🛡️ **Known-hosts verification** (TOFU) — warns if a server's key changes
+- 🔀 **Local port forwarding** (SSH tunnels, `-L`) managed per host
 - 🎨 **Themes & appearance** — built-in themes, font & size, adjustable padding, live preview
 - 🪟 **Immersive UI** — full-screen terminal, hover-reveal top bar (Terminal/Files) and left dock (active sessions)
 - 🔗 **Multi-session** + **detach** a connection into its own window
@@ -68,10 +70,11 @@ Built on:
 
 ## 🗺️ Roadmap
 
-- [ ] Known-hosts verification (currently accepts any host key)
-- [ ] Port forwarding (tunnels)
-- [ ] Upload progress for large transfers
+- [x] Known-hosts verification (TOFU)
+- [x] Port forwarding (local SSH tunnels)
+- [x] Upload progress for large transfers
 - [ ] App notarization for easy distribution
+- [ ] iCloud Keychain sync for passwords (needs entitlements / Xcode project)
 
 ## 🤝 Contributing
 
@@ -83,6 +86,7 @@ MIT — see [LICENSE](LICENSE).
 
 ## ⚠️ Security note
 
-Host key verification is not yet enforced (`acceptAnything`). Use on trusted
-networks until known-hosts support lands. Passwords/keys are stored in the macOS
-Keychain and never written to disk in plain text.
+Server host keys are verified on a trust-on-first-use basis: the key is stored on
+the first connection and you're warned (and the connection blocked) if it changes
+later. Passwords/keys are stored in the macOS Keychain and never written to disk in
+plain text.
