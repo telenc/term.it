@@ -5,9 +5,14 @@ import UserNotifications
 /// quand l'app n'est pas au premier plan — comme un terminal local qui « saute ».
 @MainActor
 enum BellNotifier {
-    /// À appeler au lancement pour demander l'autorisation des notifications.
+    /// Délégué retenu : permet d'afficher les bannières même app au premier plan.
+    private static let delegate = NotificationDelegate()
+
+    /// À appeler au lancement : configure le délégué et demande l'autorisation.
     static func requestAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        let center = UNUserNotificationCenter.current()
+        center.delegate = delegate
+        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
     static func handleBell(host: String, window: NSWindow?) {
@@ -17,19 +22,42 @@ enum BellNotifier {
         let windowFocused = window?.isKeyWindow ?? false
 
         if appActive && windowFocused {
-            // Au premier plan et focus : simple bip discret.
             NSSound.beep()
             return
         }
 
-        // En arrière-plan / fenêtre non focalisée : on attire l'attention.
-        NSApp.requestUserAttention(.criticalRequest) // fait rebondir l'icône du Dock
+        NSApp.requestUserAttention(.criticalRequest) // rebond du Dock
+        post(title: "term.it",
+             body: host.isEmpty ? "Activité terminée dans le terminal" : "Activité terminée — \(host)")
+    }
 
-        let content = UNMutableNotificationContent()
-        content.title = "term.it"
-        content.body = host.isEmpty ? "Activité terminée dans le terminal" : "Activité terminée — \(host)"
-        content.sound = .default
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+    /// Notification de test (toujours affichée), pour vérifier la configuration.
+    static func test() {
+        NSApp.requestUserAttention(.informationalRequest)
+        post(title: "term.it", body: "Ceci est une notification de test 🔔")
+    }
+
+    private static func post(title: String, body: String) {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else {
+                return
+            }
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = body
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+            center.add(request)
+        }
+    }
+}
+
+/// Affiche les notifications même quand l'app est au premier plan.
+private final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
     }
 }

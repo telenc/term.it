@@ -81,6 +81,7 @@ struct SettingsView: View {
                 Text("Quand une appli distante émet la cloche (ex. claude code qui a terminé) et que term.it n'est pas au premier plan : rebond du Dock + notification macOS.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Button("Tester la notification") { BellNotifier.test() }
             }
 
             Section("Marges") {
