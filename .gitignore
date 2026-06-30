@@ -1,0 +1,26 @@
+# Build
+.build/
+build/
+*.o
+*.swiftmodule
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+*.xcuserstate
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# SwiftPM
+.swiftpm/
+# Package.resolved est versionné (app → builds reproductibles)
+
+# Divers
+*.log
+scratchpad/
