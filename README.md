@@ -8,6 +8,17 @@ A free, open-source, **native macOS SSH & SFTP client** built with Swift and Swi
 ![Swift](https://img.shields.io/badge/Swift-6-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+## 📸 Screenshots
+
+|  |  |
+|:--:|:--:|
+| ![Launcher](assets/launcher.png) | ![Terminal](assets/terminal.png) |
+| **Connection picker** | **Full-screen terminal** |
+| ![SFTP](assets/sftp.png) | ![Settings](assets/settings.png) |
+| **SFTP file browser** | **Themes & settings** |
+
+<p align="center"><img src="assets/demo.gif" alt="Demo" width="700"></p>
+
 ## ✨ Features
 
 - 🖥️ **Full SSH terminal** — xterm-256color emulation (SwiftTerm), scrollback, mouse reporting (works with TUIs like `claude`, `vim`, `htop`)

@@ -18,7 +18,7 @@ struct SettingsView: View {
         Form {
             Section("iCloud") {
                 Toggle("Synchroniser via iCloud", isOn: $settings.iCloudSync)
-                Text("Synchronise tes connexions entre tes Macs via iCloud Drive, et les mots de passe / clés via iCloud Keychain. Aucun serveur, chiffré par Apple.")
+                Text("Synchronise tes connexions (adresse, utilisateur, réglages, icône) entre tes Macs via iCloud Drive. Aucun serveur.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -35,7 +35,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Text("Note : la synchronisation des mots de passe nécessite que « Trousseau iCloud » soit activé dans tes Réglages Système.")
+                Text("Mots de passe et clés : stockés localement dans le Trousseau de cet appareil. Ils ne sont pas synchronisés (à re-saisir sur chaque Mac).")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

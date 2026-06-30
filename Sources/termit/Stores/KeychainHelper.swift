@@ -17,15 +17,27 @@ enum KeychainHelper {
         let data = Data(secret.utf8)
         // Supprime l'entrée existante (locale et/ou synchronisée) avant d'écrire.
         delete(account: account)
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
-            kSecAttrSynchronizable as String: syncEnabled ? kCFBooleanTrue! : kCFBooleanFalse!
-        ]
-        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+
+        func add(synchronizable: Bool) -> OSStatus {
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: account,
+                kSecValueData as String: data,
+                kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+                kSecAttrSynchronizable as String: synchronizable ? kCFBooleanTrue! : kCFBooleanFalse!
+            ]
+            return SecItemAdd(query as CFDictionary, nil)
+        }
+
+        // Tente la synchro iCloud Keychain si demandée…
+        if syncEnabled {
+            if add(synchronizable: true) == errSecSuccess { return true }
+            // …mais si l'environnement n'a pas les droits iCloud Keychain,
+            // l'écriture échoue : on retombe sur une sauvegarde LOCALE garantie.
+            delete(account: account)
+        }
+        return add(synchronizable: false) == errSecSuccess
     }
 
     static func read(account: String) -> String? {
