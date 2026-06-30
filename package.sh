@@ -1,5 +1,5 @@
 #!/bin/bash
-# Construit FreeTermius et l'empaquette dans un bundle .app macOS.
+# Construit term.it et l'empaquette dans un bundle .app macOS.
 set -e
 cd "$(dirname "$0")"
 
@@ -13,15 +13,16 @@ echo "▶ Compilation ($CONFIG)…"
 swift build -c "$CONFIG"
 
 BIN_PATH="$(swift build -c "$CONFIG" --show-bin-path)"
-APP="build/FreeTermius.app"
+APP="build/term.it.app"
 
 echo "▶ Création du bundle $APP…"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
 mkdir -p "$APP/Contents/Resources"
 
-cp "$BIN_PATH/FreeTermius" "$APP/Contents/MacOS/FreeTermius"
+cp "$BIN_PATH/termit" "$APP/Contents/MacOS/termit"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
 # Copie les bundles de ressources SPM (plats, sans code) dans Resources/.
 # Bundle.module les retrouve via le resourceURL de l'app.

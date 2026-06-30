@@ -7,7 +7,7 @@ import Security
 /// Les items sont marqués `kSecAttrSynchronizable` afin d'être synchronisés
 /// (chiffrés) entre les Macs de l'utilisateur via iCloud Keychain.
 enum KeychainHelper {
-    private static let service = "com.freetermius.credentials"
+    private static let service = "com.termit.credentials"
 
     /// Active la synchronisation iCloud Keychain des nouveaux secrets.
     static var syncEnabled = true

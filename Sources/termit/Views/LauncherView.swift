@@ -55,7 +55,7 @@ struct LauncherView: View {
             Image(systemName: "terminal.fill")
                 .font(.system(size: 40, weight: .medium))
                 .foregroundStyle(.tint)
-            Text("FreeTermius")
+            Text("term.it")
                 .font(.system(size: 22, weight: .semibold, design: .rounded))
             Text("Choisis une connexion")
                 .font(.callout)

@@ -3,17 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>FreeTermius</string>
+    <string>term.it</string>
     <key>CFBundleDisplayName</key>
-    <string>FreeTermius</string>
+    <string>term.it</string>
     <key>CFBundleIdentifier</key>
-    <string>com.freetermius.app</string>
+    <string>com.termit.app</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
     <key>CFBundleExecutable</key>
-    <string>FreeTermius</string>
+    <string>termit</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>

@@ -139,7 +139,7 @@ struct RootView: View {
     @State private var confirmDetach: TermSession?
 
     private var windowTitle: String {
-        store.active?.host.name ?? "FreeTermius"
+        store.active?.host.name ?? "term.it"
     }
 
     var body: some View {

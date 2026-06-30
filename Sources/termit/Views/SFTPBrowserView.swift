@@ -494,7 +494,7 @@ struct SFTPBrowserView: View {
                 if let url = await model.downloadToTemp(file) {
                     completion(url, false, nil)
                 } else {
-                    completion(nil, false, NSError(domain: "FreeTermius", code: 1))
+                    completion(nil, false, NSError(domain: "term.it", code: 1))
                 }
             }
             return nil

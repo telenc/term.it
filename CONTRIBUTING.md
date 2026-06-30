@@ -1,13 +1,13 @@
-# Contributing to FreeTermius
+# Contributing to term.it
 
-Thanks for your interest in improving FreeTermius! 🎉
+Thanks for your interest in improving term.it! 🎉
 
 ## Getting started
 
 1. Fork and clone the repo.
 2. Build it:
    ```bash
-   ./package.sh release && open build/FreeTermius.app
+   ./package.sh release && open build/term.it.app
    # or: swift run
    ```
 3. Requirements: macOS 15+, Xcode 16+.

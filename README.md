@@ -1,4 +1,4 @@
-# FreeTermius
+# term.it
 
 A free, open-source, **native macOS SSH & SFTP client** built with Swift and SwiftUI — a lightweight alternative to Termius. No Electron, no account, no subscription.
 
@@ -28,12 +28,12 @@ A free, open-source, **native macOS SSH & SFTP client** built with Swift and Swi
 ## 🛠️ Build & run
 
 ```bash
-git clone https://github.com/<you>/FreeTermius.git
-cd FreeTermius
+git clone https://github.com/telenc/term.it.git
+cd term.it
 
 # Build a signed .app bundle (ad-hoc signature by default)
 ./package.sh release
-open build/FreeTermius.app
+open build/term.it.app
 
 # Or, for quick development
 swift run
@@ -45,7 +45,7 @@ swift run
 ## 🧱 Architecture
 
 ```
-Sources/FreeTermius/
+Sources/termit/
 ├── App/        SwiftUI entry point + SwiftData container + Settings scene
 ├── Models/     Host, HostGroup (SwiftData)
 ├── Stores/     Keychain, credential resolver, iCloud sync, settings/themes

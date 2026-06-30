@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "FreeTermius",
+    name: "termit",
     platforms: [
         .macOS(.v15)
     ],
     products: [
-        .executable(name: "FreeTermius", targets: ["FreeTermius"])
+        .executable(name: "termit", targets: ["termit"])
     ],
     dependencies: [
         .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.2.0"),
@@ -15,12 +15,12 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "FreeTermius",
+            name: "termit",
             dependencies: [
                 .product(name: "SwiftTerm", package: "SwiftTerm"),
                 .product(name: "Citadel", package: "Citadel"),
             ],
-            path: "Sources/FreeTermius",
+            path: "Sources/termit",
             swiftSettings: [
                 .swiftLanguageMode(.v5)
             ]

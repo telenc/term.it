@@ -46,7 +46,7 @@ final class HostSyncService {
     /// Dossier iCloud Drive de l'app (existe si iCloud Drive est activé).
     private var folderURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs/FreeTermius", isDirectory: true)
+            .appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs/term.it", isDirectory: true)
     }
     private var fileURL: URL { folderURL.appendingPathComponent("hosts.json") }
 

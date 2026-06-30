@@ -5,7 +5,7 @@ import SwiftData
 let detachedWindowID = "detached-session"
 
 @main
-struct FreeTermiusApp: App {
+struct TermitApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([Host.self, HostGroup.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
