@@ -22,6 +22,8 @@ final class SFTPModel {
     var errorMessage: String?
     /// Message de retour transitoire (transfert réussi, etc.).
     var statusMessage: String?
+    /// Progression d'un upload en cours (nil = aucun).
+    var upload: UploadStatus?
 
     private let connection = SSHConnection()
     private var sftp: SFTPClient?
@@ -235,15 +237,18 @@ final class SFTPModel {
 
     func upload(localURL: URL) async {
         guard let sftp else { return }
-        isLoading = true
-        defer { isLoading = false }
+        let name = localURL.lastPathComponent
+        upload = UploadStatus(name: name, fraction: 0)
+        defer { upload = nil }
         do {
             let data = try Data(contentsOf: localURL)
-            let remotePath = normalized(path + "/" + localURL.lastPathComponent)
+            let remotePath = normalized(path + "/" + name)
             try await sftp.withFile(filePath: remotePath, flags: [.write, .create, .truncate]) { handle in
-                try await handle.write(ByteBuffer(bytes: data))
+                try await SSHConnection.writeChunked(data, to: handle) { frac in
+                    Task { @MainActor in self.upload = UploadStatus(name: name, fraction: frac) }
+                }
             }
-            statusMessage = "Envoyé : \(localURL.lastPathComponent)"
+            statusMessage = "Envoyé : \(name)"
             await reload()
         } catch {
             errorMessage = describe(error)
@@ -316,6 +321,22 @@ struct SFTPBrowserView: View {
             Divider()
             statusBar
         }
+        .overlay {
+            if let up = model.upload {
+                VStack(spacing: 12) {
+                    ProgressView(value: up.fraction)
+                        .progressViewStyle(.linear)
+                        .frame(width: 220)
+                    Text("Envoi de « \(up.name) » — \(Int(up.fraction * 100)) %")
+                        .font(.callout).foregroundStyle(.secondary)
+                        .lineLimit(1).truncationMode(.middle)
+                }
+                .padding(28)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.white.opacity(0.1)))
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: model.upload)
         .task { await model.connectIfNeeded() }
         .onDisappear { Task { await model.disconnect() } }
         .alert("Erreur SFTP", isPresented: .init(

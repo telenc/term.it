@@ -17,6 +17,12 @@ struct SSHConnectionConfig: Sendable {
     var onConnectCommand: String?
 }
 
+/// État d'un transfert en cours, pour l'affichage d'une progression.
+struct UploadStatus: Sendable, Equatable {
+    var name: String
+    var fraction: Double   // 0…1
+}
+
 enum SSHConnectionError: LocalizedError {
     case missingSecret
     case unsupportedKey
@@ -158,8 +164,8 @@ actor SSHConnection {
     }
 
     /// Upload un fichier local vers `/tmp/<nom>` sur le serveur (canal SFTP mis en cache).
-    /// Retourne le chemin distant.
-    func uploadToTmp(localURL: URL) async throws -> String {
+    /// Écrit par morceaux et rapporte la progression (0…1). Retourne le chemin distant.
+    func uploadToTmp(localURL: URL, onProgress: @escaping @Sendable (Double) -> Void) async throws -> String {
         guard let client else { throw SSHConnectionError.notConnected }
         if cachedSFTP == nil { cachedSFTP = try await client.openSFTP() }
         guard let sftp = cachedSFTP else { throw SSHConnectionError.notConnected }
@@ -167,9 +173,27 @@ actor SSHConnection {
         let data = try Data(contentsOf: localURL)
         let remotePath = "/tmp/" + localURL.lastPathComponent
         try await sftp.withFile(filePath: remotePath, flags: [.write, .create, .truncate]) { handle in
-            try await handle.write(ByteBuffer(bytes: data))
+            try await Self.writeChunked(data, to: handle, onProgress: onProgress)
         }
         return remotePath
+    }
+
+    /// Taille de morceau pour les transferts (compromis débit / granularité de progression).
+    static let chunkSize = 32 * 1024
+
+    /// Écrit des données dans un fichier SFTP par morceaux, en rapportant la progression.
+    static func writeChunked(_ data: Data, to handle: SFTPFile,
+                             onProgress: @Sendable (Double) -> Void) async throws {
+        let total = data.count
+        guard total > 0 else { onProgress(1); return }
+        var offset = 0
+        while offset < total {
+            let end = Swift.min(offset + chunkSize, total)
+            let slice = data[(data.startIndex + offset)..<(data.startIndex + end)]
+            try await handle.write(ByteBuffer(bytes: slice), at: UInt64(offset))
+            offset = end
+            onProgress(Double(offset) / Double(total))
+        }
     }
 
     func disconnect() async {

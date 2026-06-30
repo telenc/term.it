@@ -330,7 +330,7 @@ struct SessionContent: View {
 
     @State private var didLoadFiles = false
     @State private var errorMessage: String?
-    @State private var uploading = false
+    @State private var upload: UploadStatus?
     private let settings = TerminalSettings.shared
 
     var body: some View {
@@ -343,7 +343,7 @@ struct SessionContent: View {
                 fontSize: settings.fontSize,
                 fontName: settings.fontName,
                 onError: { errorMessage = $0 },
-                onUploading: { uploading = $0 }
+                onUpload: { upload = $0 }
             )
             .padding(.horizontal, settings.paddingH)
             .padding(.bottom, settings.paddingV)
@@ -361,12 +361,16 @@ struct SessionContent: View {
             }
         }
         .overlay {
-            if uploading {
+            if let upload {
                 VStack(spacing: 12) {
-                    ProgressView().controlSize(.large)
-                    Text("Envoi du fichier…")
+                    ProgressView(value: upload.fraction)
+                        .progressViewStyle(.linear)
+                        .frame(width: 220)
+                    Text("Envoi de « \(upload.name) » — \(Int(upload.fraction * 100)) %")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                 }
                 .padding(28)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
@@ -374,7 +378,7 @@ struct SessionContent: View {
                 .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.15), value: uploading)
+        .animation(.easeInOut(duration: 0.15), value: upload)
         .background(Color(white: 0.07))
         .ignoresSafeArea()
         .onChange(of: session.tab) { _, newValue in

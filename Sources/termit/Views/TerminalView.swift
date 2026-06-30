@@ -20,8 +20,8 @@ struct SSHTerminalView: NSViewRepresentable {
     var fontName: String
     /// Remonte les erreurs de connexion à l'UI.
     var onError: (String) -> Void = { _ in }
-    /// Indique si un upload (drop sur terminal) est en cours.
-    var onUploading: (Bool) -> Void = { _ in }
+    /// Progression d'un upload (drop sur terminal) ; nil = aucun en cours.
+    var onUpload: (UploadStatus?) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(config: config, onError: onError)
@@ -37,7 +37,7 @@ struct SSHTerminalView: NSViewRepresentable {
         terminal.onDropFileURLs = { [weak coordinator = context.coordinator] urls in
             coordinator?.uploadAndPaste(urls)
         }
-        context.coordinator.onUploading = onUploading
+        context.coordinator.onUpload = onUpload
         context.coordinator.attach(terminal)
         return terminal
     }
@@ -175,22 +175,25 @@ struct SSHTerminalView: NSViewRepresentable {
             Task { try? await connection.send(Data(text.utf8)) }
         }
 
-        /// Notifie l'UI qu'un upload est en cours (pour afficher un chargement).
-        var onUploading: ((Bool) -> Void)?
+        /// Notifie l'UI de la progression d'un upload (nil = terminé).
+        var onUpload: ((UploadStatus?) -> Void)?
 
         /// Upload les fichiers déposés vers /tmp du serveur, puis colle leurs chemins distants.
         func uploadAndPaste(_ urls: [URL]) {
             Task {
-                await MainActor.run { self.onUploading?(true) }
-                defer { Task { @MainActor in self.onUploading?(false) } }
+                defer { Task { @MainActor in self.onUpload?(nil) } }
                 var remotePaths: [String] = []
                 for url in urls {
+                    let name = url.lastPathComponent
+                    await MainActor.run { self.onUpload?(UploadStatus(name: name, fraction: 0)) }
                     do {
-                        let remote = try await connection.uploadToTmp(localURL: url)
+                        let remote = try await connection.uploadToTmp(localURL: url) { frac in
+                            Task { @MainActor in self.onUpload?(UploadStatus(name: name, fraction: frac)) }
+                        }
                         remotePaths.append(shellEscapePath(remote))
                     } catch {
                         await MainActor.run {
-                            self.terminal?.feed(text: "\r\n\u{1b}[31m[Échec upload \(url.lastPathComponent): \(error.localizedDescription)]\u{1b}[0m\r\n")
+                            self.terminal?.feed(text: "\r\n\u{1b}[31m[Échec upload \(name): \(error.localizedDescription)]\u{1b}[0m\r\n")
                         }
                     }
                 }
