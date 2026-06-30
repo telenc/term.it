@@ -21,12 +21,17 @@ enum SSHConnectionError: LocalizedError {
     case missingSecret
     case unsupportedKey
     case notConnected
+    case hostKeyChanged(String)
 
     var errorDescription: String? {
         switch self {
         case .missingSecret: return "Aucun mot de passe ou clé trouvé pour cet hôte."
         case .unsupportedKey: return "Format de clé privée non supporté (utilise une clé OpenSSH ed25519 ou RSA)."
         case .notConnected: return "La connexion SSH n'est pas établie."
+        case .hostKeyChanged(let fp):
+            return "⚠️ La clé du serveur a CHANGÉ depuis la dernière connexion (\(fp)). "
+                + "Cela peut indiquer une interception (man-in-the-middle). "
+                + "Si ce changement est légitime, oublie la clé connue dans les réglages de l'hôte, puis reconnecte-toi."
         }
     }
 }
@@ -63,14 +68,24 @@ actor SSHConnection {
     /// Établit la connexion TCP + handshake SSH.
     func connect(_ config: SSHConnectionConfig) async throws {
         let auth = try Self.makeAuth(config)
-        let client = try await SSHClient.connect(
-            host: config.hostname,
-            port: config.port,
-            authenticationMethod: auth,
-            hostKeyValidator: .acceptAnything(), // TODO: stocker/valider les host keys (known_hosts)
-            reconnect: .never
-        )
-        self.client = client
+        // Validation TOFU des clés serveur (known_hosts).
+        let validator = TOFUHostKeyValidator(host: config.hostname, port: config.port)
+        do {
+            let client = try await SSHClient.connect(
+                host: config.hostname,
+                port: config.port,
+                authenticationMethod: auth,
+                hostKeyValidator: .custom(validator),
+                reconnect: .never
+            )
+            self.client = client
+        } catch {
+            // Si l'échec vient d'un changement de clé, message explicite.
+            if validator.didMismatch {
+                throw SSHConnectionError.hostKeyChanged(validator.fingerprint)
+            }
+            throw error
+        }
     }
 
     /// Ouvre un shell interactif. `onOutput` reçoit les octets bruts du serveur,

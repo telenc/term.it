@@ -95,6 +95,18 @@ struct HostFormView: View {
                     }
                 }
 
+                Section("Sécurité") {
+                    Button("Oublier la clé du serveur connue") {
+                        if let p = Int(port) {
+                            KnownHostsStore.forget(host: hostname, port: p)
+                        }
+                    }
+                    .disabled(hostname.isEmpty)
+                    Text("À utiliser si la clé du serveur a légitimement changé (réinstallation, etc.). La prochaine connexion re-mémorisera la nouvelle clé.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 Section("Au démarrage") {
                     TextField("Commande (snippet)", text: $onConnectCommand,
                               prompt: Text("ex. cd /var/www && ls -la"))
