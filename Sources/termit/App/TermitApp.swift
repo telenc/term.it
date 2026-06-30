@@ -7,7 +7,7 @@ let detachedWindowID = "detached-session"
 @main
 struct TermitApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Host.self, HostGroup.self])
+        let schema = Schema([Host.self, HostGroup.self, PortForward.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [config])

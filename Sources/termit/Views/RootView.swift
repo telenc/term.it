@@ -137,6 +137,7 @@ struct RootView: View {
     @State private var hoverTop = false
     @State private var hoverLeft = false
     @State private var confirmDetach: TermSession?
+    @State private var tunnelsHost: Host?
 
     private var windowTitle: String {
         store.active?.host.name ?? "term.it"
@@ -185,6 +186,7 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.2), value: store.sessions.count)
         .sheet(isPresented: $showAddHost) { HostFormView(host: nil) }
         .sheet(item: $editingHost) { HostFormView(host: $0) }
+        .sheet(item: $tunnelsHost) { PortForwardsView(host: $0) }
         .onReceive(NotificationCenter.default.publisher(for: .newHostRequested)) { _ in
             if store.sessions.isEmpty { showAddHost = true }
             else { store.showLauncher = true }
@@ -235,9 +237,12 @@ struct RootView: View {
             ZStack(alignment: .top) {
                 Color.clear
                 if let session = store.active {
-                    SessionTabsCapsule(session: session, showDetach: true) {
-                        confirmDetach = session
-                    }
+                    SessionTabsCapsule(
+                        session: session,
+                        showDetach: true,
+                        onDetach: { confirmDetach = session },
+                        onTunnels: { tunnelsHost = session.host }
+                    )
                     .padding(.top, 8)
                     .opacity(hoverTop ? 1 : 0)
                     .offset(y: hoverTop ? 0 : -12)
@@ -430,13 +435,26 @@ struct SessionTabsCapsule: View {
     let session: TermSession
     var showDetach: Bool = false
     var onDetach: () -> Void = {}
+    var onTunnels: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 8) {
             tab("terminal", "Terminal", session.tab == .terminal) { session.tab = .terminal }
             tab("folder", "Fichiers", session.tab == .files) { session.tab = .files }
-            if showDetach {
+            if onTunnels != nil || showDetach {
                 Divider().frame(height: 16).overlay(.white.opacity(0.15))
+            }
+            if let onTunnels {
+                Button(action: onTunnels) {
+                    Image(systemName: "point.3.connected.trianglepath.dotted")
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.horizontal, 8).padding(.vertical, 6)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain).pointerCursor()
+                .help("Redirections de port (tunnels)")
+            }
+            if showDetach {
                 Button(action: onDetach) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .font(.system(size: 12, weight: .medium))

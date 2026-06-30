@@ -196,6 +196,13 @@ actor SSHConnection {
         }
     }
 
+    /// Démarre un forward local et renvoie le canal serveur (le fermer = arrêter).
+    func startLocalForward(localPort: Int, remoteHost: String, remotePort: Int) async throws -> Channel {
+        guard let client else { throw SSHConnectionError.notConnected }
+        return try await PortForwarder.startLocalForward(
+            client: client, localPort: localPort, remoteHost: remoteHost, remotePort: remotePort)
+    }
+
     func disconnect() async {
         try? await cachedSFTP?.close()
         cachedSFTP = nil
