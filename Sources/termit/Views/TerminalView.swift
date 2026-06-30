@@ -18,6 +18,8 @@ struct SSHTerminalView: NSViewRepresentable {
     var themeName: String
     var fontSize: Double
     var fontName: String
+    /// Nom de l'hôte (pour les notifications de cloche).
+    var hostName: String = ""
     /// Remonte les erreurs de connexion à l'UI.
     var onError: (String) -> Void = { _ in }
     /// Progression d'un upload (drop sur terminal) ; nil = aucun en cours.
@@ -38,6 +40,7 @@ struct SSHTerminalView: NSViewRepresentable {
             coordinator?.uploadAndPaste(urls)
         }
         context.coordinator.onUpload = onUpload
+        context.coordinator.hostName = hostName
         context.coordinator.attach(terminal)
         return terminal
     }
@@ -57,6 +60,8 @@ struct SSHTerminalView: NSViewRepresentable {
         private let onError: (String) -> Void
         private weak var terminal: TerminalView?
         private var started = false
+        /// Nom d'hôte affiché dans les notifications de cloche.
+        var hostName: String = ""
 
         init(config: SSHConnectionConfig, onError: @escaping (String) -> Void) {
             self.config = config
@@ -230,7 +235,11 @@ struct SSHTerminalView: NSViewRepresentable {
             }
         }
         func rangeChanged(source: TerminalView, startY: Int, endY: Int) {}
-        func bell(source: TerminalView) { NSSound.beep() }
+        func bell(source: TerminalView) {
+            let host = hostName
+            let window = source.window
+            Task { @MainActor in BellNotifier.handleBell(host: host, window: window) }
+        }
         func iTermContent(source: TerminalView, _ content: ArraySlice<UInt8>) {}
     }
 }

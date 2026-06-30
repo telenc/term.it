@@ -61,6 +61,8 @@ final class TerminalSettings {
     var paddingV: Double { didSet { d.set(paddingV, forKey: "paddingV") } }
     /// Synchronisation des connexions via iCloud Drive + iCloud Keychain.
     var iCloudSync: Bool { didSet { d.set(iCloudSync, forKey: "iCloudSync") } }
+    /// Notifier (Dock + bannière) quand le terminal sonne (cloche/BEL).
+    var notifyOnBell: Bool { didSet { d.set(notifyOnBell, forKey: "notifyOnBell") } }
 
     private let d = UserDefaults.standard
 
@@ -71,6 +73,7 @@ final class TerminalSettings {
         paddingH = d.object(forKey: "paddingH") as? Double ?? 14
         paddingV = d.object(forKey: "paddingV") as? Double ?? 12
         iCloudSync = d.object(forKey: "iCloudSync") as? Bool ?? true
+        notifyOnBell = d.object(forKey: "notifyOnBell") as? Bool ?? true
     }
 
     var theme: TerminalTheme { TerminalThemes.theme(named: themeName) }

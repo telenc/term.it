@@ -199,6 +199,8 @@ struct RootView: View {
             KeychainHelper.syncEnabled = settings.iCloudSync
             HostSyncService.shared.configure(context: context)
             if settings.iCloudSync { HostSyncService.shared.start() }
+            // Autorisation des notifications (cloche du terminal).
+            BellNotifier.requestAuthorization()
         }
         .confirmationDialog(
             "Détacher cette connexion ?",
@@ -246,12 +248,12 @@ struct RootView: View {
                     .padding(.top, 8)
                     .opacity(hoverTop ? 1 : 0)
                     .offset(y: hoverTop ? 0 : -12)
+                    .allowsHitTesting(hoverTop)
                 }
             }
             .frame(maxWidth: .infinity)
             .frame(height: 64)
-            .contentShape(Rectangle())
-            .onHover { hoverTop = $0 }
+            .background(HoverTracker { hoverTop = $0 })
 
             Spacer(minLength: 0)
         }
@@ -290,11 +292,11 @@ struct RootView: View {
                 .padding(.leading, 10)
                 .opacity(hoverLeft ? 1 : 0)
                 .offset(x: hoverLeft ? 0 : -20)
+                .allowsHitTesting(hoverLeft)
             }
             .frame(maxHeight: .infinity)
             .frame(width: 74)
-            .contentShape(Rectangle())
-            .onHover { hoverLeft = $0 }
+            .background(HoverTracker { hoverLeft = $0 })
 
             Spacer(minLength: 0)
         }
@@ -347,6 +349,7 @@ struct SessionContent: View {
                 themeName: settings.themeName,
                 fontSize: settings.fontSize,
                 fontName: settings.fontName,
+                hostName: session.host.name,
                 onError: { errorMessage = $0 },
                 onUpload: { upload = $0 }
             )
@@ -397,6 +400,42 @@ struct SessionContent: View {
         } message: {
             Text(errorMessage ?? "")
         }
+    }
+}
+
+// MARK: - Détecteur de survol qui laisse passer les clics
+
+/// Signale l'entrée/sortie de la souris SANS intercepter les clics
+/// (hitTest renvoie nil → les clics atteignent les vues en dessous).
+struct HoverTracker: NSViewRepresentable {
+    var onChange: (Bool) -> Void
+
+    func makeNSView(context: Context) -> NSView { TrackingView(onChange: onChange) }
+    func updateNSView(_ nsView: NSView, context: Context) {
+        (nsView as? TrackingView)?.onChange = onChange
+    }
+
+    final class TrackingView: NSView {
+        var onChange: (Bool) -> Void
+        init(onChange: @escaping (Bool) -> Void) {
+            self.onChange = onChange
+            super.init(frame: .zero)
+        }
+        required init?(coder: NSCoder) { fatalError() }
+
+        // Laisse passer tous les clics aux vues sous-jacentes.
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            trackingAreas.forEach(removeTrackingArea)
+            addTrackingArea(NSTrackingArea(
+                rect: bounds,
+                options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                owner: self))
+        }
+        override func mouseEntered(with event: NSEvent) { onChange(true) }
+        override func mouseExited(with event: NSEvent) { onChange(false) }
     }
 }
 

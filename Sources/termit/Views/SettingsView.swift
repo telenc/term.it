@@ -76,6 +76,13 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Notifications") {
+                Toggle("Notifier quand le terminal sonne", isOn: $settings.notifyOnBell)
+                Text("Quand une appli distante émet la cloche (ex. claude code qui a terminé) et que term.it n'est pas au premier plan : rebond du Dock + notification macOS.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Marges") {
                 HStack {
                     Text("Horizontale")
